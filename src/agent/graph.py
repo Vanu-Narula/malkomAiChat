@@ -92,29 +92,52 @@ def add_human_in_the_loop(
     return call_tool_with_interrupt
 
 
-def fetch_email(bucket: str = "malkom-dev-poc", key: str = "Vanraj/sample_email_chain.html") -> str:
-    """
-    Fetch the content of an email stored as an HTML file in an AWS S3 bucket.
+# def fetch_email(bucket: str = "malkom-dev-poc", key: str = "Vanraj/sample_email_chain.html") -> str:
+#     """
+#     Fetch the content of an email stored as an HTML file in an AWS S3 bucket.
 
-    This function retrieves the HTML content of an email stored in S3.
+#     This function retrieves the HTML content of an email stored in S3.
+
+#     Args:
+#         bucket (str, optional): The name of the S3 bucket where the email HTML file is stored.
+#             Defaults to "malkom-dev-poc".
+#         key (str, optional): The key (file path within the bucket) of the HTML file to fetch.
+#             Defaults to "Vanraj/sample_email_chain.html".
+
+#     Returns:
+#         str: The decoded HTML content of the file if successful.
+#              Returns an error message string if the operation fails.
+#     """
+#     s3_client = boto3.client('s3')
+#     try:
+#         response = s3_client.get_object(Bucket=bucket, Key=key)
+#         email_content = response['Body'].read().decode('utf-8')
+#         return email_content
+#     except Exception as e:
+#         return f"Error fetching email: {str(e)}"
+    
+
+def fetch_email_from_file(
+    filepath: str = "dummy_files/sample_email_chain.html"
+) -> str:
+    """
+    Fetch the content of an email stored as an HTML file from the local file system.
 
     Args:
-        bucket (str, optional): The name of the S3 bucket where the email HTML file is stored.
-            Defaults to "malkom-dev-poc".
-        key (str, optional): The key (file path within the bucket) of the HTML file to fetch.
-            Defaults to "Vanraj/sample_email_chain.html".
+        filepath (str, optional): The relative path to the HTML file within the project.
+            Defaults to "dummy_files/sample_email_chain.html".
 
     Returns:
-        str: The decoded HTML content of the file if successful.
+        str: The HTML content of the email file if successful.
              Returns an error message string if the operation fails.
     """
-    s3_client = boto3.client('s3')
     try:
-        response = s3_client.get_object(Bucket=bucket, Key=key)
-        email_content = response['Body'].read().decode('utf-8')
-        return email_content
+        with open(filepath, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        return f"File not found: {filepath}"
     except Exception as e:
-        return f"Error fetching email: {str(e)}"
+        return f"Error reading file: {str(e)}"
 
 
 def send_email_reply(
@@ -168,6 +191,6 @@ def send_email_reply(
 
 graph = create_react_agent(
     model="gpt-4o",
-    tools=[fetch_email, add_human_in_the_loop(send_email_reply)],
+    tools=[fetch_email_from_file, add_human_in_the_loop(send_email_reply)],
     prompt="You are a helpful assistant"
 )
